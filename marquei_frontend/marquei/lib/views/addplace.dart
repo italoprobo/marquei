@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AddPlaces extends StatefulWidget {
   const AddPlaces({super.key});
@@ -13,6 +15,7 @@ class AddPlaces extends StatefulWidget {
 class _AddPlacesState extends State<AddPlaces> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
   double? _lat;
   double? _long;
   final Set<Marker> _markers = {};
@@ -22,7 +25,7 @@ class _AddPlacesState extends State<AddPlaces> {
     _mapController = controller;
   }
 
-  void _onTap(LatLng latLng) {
+  void _onTap(LatLng latLng) async {
     setState(() {
       _lat = latLng.latitude;
       _long = latLng.longitude;
@@ -33,7 +36,37 @@ class _AddPlacesState extends State<AddPlaces> {
         infoWindow: InfoWindow(title: 'Marcador Selecionado'),
       ));
     });
+    await _getAddressFromLatLng(_lat!, _long!);
     print("Latitude: $_lat, Longitude: $_long");
+  }
+
+  Future<void> _getAddressFromLatLng(double lat, double long) async {
+    final apiKey = dotenv.env['SUPABASE_GOOGLE_API_KEY'];
+    final url =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$long&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print(data);
+      if (data['results'].isNotEmpty) {
+        final address = data['results'][0]['formatted_address'];
+        setState(() {
+          _addressController.text = address;
+        });
+      } else {
+        _showSnackBar('Nenhum endereço encontrado para esta localização.');
+      }
+    } else {
+      _showSnackBar('Erro ao obter endereço: ${response.reasonPhrase}');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   Future<void> _addEstablishment() async {
@@ -49,18 +82,22 @@ class _AddPlacesState extends State<AddPlaces> {
       'nome': _nameController.text,
       'lat': _lat,
       'long': _long,
+      'endereco': _addressController.text,
       'avaliacao': 0,
     };
 
-    final response = await supabase.from('estabelecimentos').insert(data);
-
-    if (response.error == null) {
+    try {
+      // Fazendo a inserção no Supabase
+      final response = await supabase.from('estabelecimento').insert(data);
+      // Exibe mensagem de sucesso
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Estabelecimento adicionado com sucesso!')),
+        const SnackBar(
+            content: Text('Estabelecimento adicionado com sucesso!')),
       );
-    } else {
+    } catch (e) {
+      // Tratando possíveis exceções
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao adicionar: ${response.error!.message}')),
+        SnackBar(content: Text('Erro inesperado: $e')),
       );
     }
   }
@@ -77,7 +114,7 @@ class _AddPlacesState extends State<AddPlaces> {
             child: GoogleMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition: const CameraPosition(
-                target: LatLng(-5.101197108532969, -42.81045181541382), 
+                target: LatLng(-5.101197108532969, -42.81045181541382),
                 zoom: 14,
               ),
               markers: _markers,
@@ -101,6 +138,14 @@ class _AddPlacesState extends State<AddPlaces> {
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _addressController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Endereço',
+                    ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
