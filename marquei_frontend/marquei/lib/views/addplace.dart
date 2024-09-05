@@ -33,7 +33,7 @@ class _AddPlacesState extends State<AddPlaces> {
       _markers.add(Marker(
         markerId: const MarkerId('selected_location'),
         position: latLng,
-        infoWindow: InfoWindow(title: 'Marcador Selecionado'),
+        infoWindow: const InfoWindow(title: 'Marcador Selecionado'),
       ));
     });
     await _getAddressFromLatLng(_lat!, _long!);

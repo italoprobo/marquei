@@ -3,6 +3,8 @@ import 'package:marquei/views/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -10,43 +12,50 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController(); 
-  final _phoneController = TextEditingController(); 
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  bool _isAdmin = false;
 
   Future<void> _register() async {
     final email = _emailController.text;
     final password = _passwordController.text;
-    final name = _nameController.text; 
-    final phone = _phoneController.text; 
+    final name = _nameController.text;
+    final phone = _phoneController.text;
 
-    final response = await Supabase.instance.client.auth.signUp(
-      email: email,
-      password: password,
-    );
-
-    if (response.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: ${response.error!.message}')),
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
       );
-    } else {
+
+      if (response.user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao criar conta.')),
+        );
+        return;
+      }
 
       final userId = response.user?.id;
       if (userId != null) {
-        await Supabase.instance.client
-            .from('profiles')
-            .insert({
+        await Supabase.instance.client.from('usuarios').insert({
           'id': userId,
-          'name': name,
-          'phone': phone,
+          'nome': name,
+          'telefone': phone,
+          'is_admin': _isAdmin, 
         });
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cadastro realizado com sucesso!')),
+        const SnackBar(content: Text('Cadastro realizado com sucesso!')),
       );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    } catch (e) {
+      print('Erro ao tentar registrar o usuário: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ocorreu um erro no cadastro.')),
       );
     }
   }
@@ -54,32 +63,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Cadastro')),
+      appBar: AppBar(title: const Text('Cadastro')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Nome'),
+              decoration: const InputDecoration(labelText: 'Nome'),
             ),
             TextField(
               controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Número de Telefone'),
+              decoration: const InputDecoration(labelText: 'Número de Telefone'),
             ),
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Senha'),
+              decoration: const InputDecoration(labelText: 'Senha'),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Text('Administrador'),
+                Switch(
+                  value: _isAdmin,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _isAdmin = value; 
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _register,
-              child: Text('Criar minha conta'),
+              child: const Text('Criar minha conta'),
             ),
           ],
         ),
@@ -88,6 +111,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-extension on AuthResponse {
-  get error => null;
-}
