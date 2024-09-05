@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marquei/views/auth.dart';
+import 'package:marquei/views/map.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:marquei/views/addplace.dart';
@@ -23,7 +24,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: AuthScreen(),
       routes: {
-        '/add-place': (context) => AddPlaces()
+        '/add-place': (context) => AddPlaces(),
+        '/map': (context) => MapPage(),
       },
     );
   }

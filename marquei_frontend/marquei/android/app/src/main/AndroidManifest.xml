@@ -32,8 +32,8 @@
             android:value="2" />
 
         <meta-data
-        android:name="com.google.android.geo.AIzaSyAzTH3DZWuksRH43w5Tj-RiY9AAzLNYHyo"
-        android:value="AIzaSyAzTH3DZWuksRH43w5Tj-RiY9AAzLNYHyo"
+        android:name="com.google.android.geo.AIzaSyAruzitzkq9dgoj7yMnzbUe12X6WC4LBZo"
+        android:value="AIzaSyAruzitzkq9dgoj7yMnzbUe12X6WC4LBZo"
         />
     </application>
     <!-- Required to query activities that can process text, see:

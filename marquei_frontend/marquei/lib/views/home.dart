@@ -21,7 +21,22 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(child: Text('Bem-vindo à Home Screen!')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Bem-vindo à Home Screen!'),
+            SizedBox(height: 20), // Espaço entre o texto e o botão
+            ElevatedButton(
+              onPressed: () {
+                // Navega para a tela de adicionar lugares
+                Navigator.pushNamed(context, '/add-place');
+              },
+              child: Text('Adicionar Estabelecimento'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
