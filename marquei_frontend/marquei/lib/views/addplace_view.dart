@@ -1,9 +1,7 @@
+// views/addplace.dart
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../controllers/addplace_controller.dart';
 
 class AddPlaces extends StatefulWidget {
   const AddPlaces({super.key});
@@ -14,10 +12,7 @@ class AddPlaces extends StatefulWidget {
 
 class _AddPlacesState extends State<AddPlaces> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
-  double? _lat;
-  double? _long;
+  final _controller = AddPlaceController();
   final Set<Marker> _markers = {};
   late GoogleMapController _mapController;
 
@@ -27,39 +22,20 @@ class _AddPlacesState extends State<AddPlaces> {
 
   void _onTap(LatLng latLng) async {
     setState(() {
-      _lat = latLng.latitude;
-      _long = latLng.longitude;
+      _controller.lat = latLng.latitude;
+      _controller.long = latLng.longitude;
       _markers.clear();
       _markers.add(Marker(
         markerId: const MarkerId('selected_location'),
         position: latLng,
-        infoWindow: const InfoWindow(title: 'Marcador Selecionado'),
+        infoWindow: const InfoWindow(title: 'Localização Selecionada'),
       ));
     });
-    await _getAddressFromLatLng(_lat!, _long!);
-    print("Latitude: $_lat, Longitude: $_long");
-  }
 
-  Future<void> _getAddressFromLatLng(double lat, double long) async {
-    final apiKey = dotenv.env['SUPABASE_GOOGLE_API_KEY'];
-    final url =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$long&key=$apiKey';
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print(data);
-      if (data['results'].isNotEmpty) {
-        final address = data['results'][0]['formatted_address'];
-        setState(() {
-          _addressController.text = address;
-        });
-      } else {
-        _showSnackBar('Nenhum endereço encontrado para esta localização.');
-      }
-    } else {
-      _showSnackBar('Erro ao obter endereço: ${response.reasonPhrase}');
+    try {
+      await _controller.getAddressFromLatLng(_controller.lat!, _controller.long!);
+    } catch (e) {
+      _showSnackBar(e.toString());
     }
   }
 
@@ -69,44 +45,11 @@ class _AddPlacesState extends State<AddPlaces> {
     );
   }
 
-  Future<void> _addEstablishment() async {
-    if (_lat == null || _long == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, selecione um local no mapa.')),
-      );
-      return;
-    }
-
-    final supabase = Supabase.instance.client;
-    final data = {
-      'nome': _nameController.text,
-      'lat': _lat,
-      'long': _long,
-      'endereco': _addressController.text,
-      'avaliacao': 0,
-    };
-
-    try {
-      // Fazendo a inserção no Supabase
-      final response = await supabase.from('estabelecimento').insert(data);
-      // Exibe mensagem de sucesso
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Estabelecimento adicionado com sucesso!')),
-      );
-    } catch (e) {
-      // Tratando possíveis exceções
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro inesperado: $e')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicione um Estabelecimento'),
+        title: const Text('Adicionar Estabelecimento'),
       ),
       body: Column(
         children: [
@@ -128,7 +71,7 @@ class _AddPlacesState extends State<AddPlaces> {
               child: Column(
                 children: [
                   TextFormField(
-                    controller: _nameController,
+                    controller: _controller.nameController,
                     decoration: const InputDecoration(
                       labelText: 'Nome',
                     ),
@@ -141,7 +84,7 @@ class _AddPlacesState extends State<AddPlaces> {
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
-                    controller: _addressController,
+                    controller: _controller.addressController,
                     readOnly: true,
                     decoration: const InputDecoration(
                       labelText: 'Endereço',
@@ -151,8 +94,13 @@ class _AddPlacesState extends State<AddPlaces> {
                   ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        await _addEstablishment();
-                        Navigator.pop(context);
+                        try {
+                          await _controller.addEstablishment();
+                          _showSnackBar('Estabelecimento adicionado com sucesso!');
+                          Navigator.pop(context);
+                        } catch (e) {
+                          _showSnackBar(e.toString());
+                        }
                       }
                     },
                     child: const Text('Adicionar Estabelecimento'),
