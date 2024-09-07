@@ -5,12 +5,49 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AddPlaceController {
   final nameController = TextEditingController();
   final addressController = TextEditingController();
   double? lat;
   double? long;
+
+  // Método para obter a localização atual do usuário
+  Future<LatLng> getCurrentLocation() async {
+    // Solicita permissões de localização e verifica se o serviço está habilitado
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Por favor, habilite os serviços de localização.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Permissão de localização negada.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception(
+          'Permissão de localização permanentemente negada. Não podemos acessar sua localização.');
+    }
+
+    // Obtém a localização atual do usuário com a precisão desejada
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high, // Usa precisão alta
+    );
+
+    // Atualiza as coordenadas no controller
+    lat = position.latitude;
+    long = position.longitude;
+
+    return LatLng(lat!, long!);
+  }
 
   // Função para obter o endereço a partir da latitude e longitude
   Future<void> getAddressFromLatLng(double lat, double long) async {

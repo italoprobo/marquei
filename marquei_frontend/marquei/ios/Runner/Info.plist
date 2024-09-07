@@ -47,5 +47,9 @@
 	<true/>
 	<key>GMSApiKey</key>
 	<string>AIzaSyAruzitzkq9dgoj7yMnzbUe12X6WC4LBZo</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para mostrar sua posição no mapa.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Precisamos da sua localização para mostrar sua posição no mapa.</string>
 </dict>
 </plist>

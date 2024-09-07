@@ -16,8 +16,36 @@ class _AddPlacesState extends State<AddPlaces> {
   final Set<Marker> _markers = {};
   late GoogleMapController _mapController;
 
+  // Atualiza a câmera do mapa para a posição atual do usuário
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+    _setCurrentLocation();
+  }
+
+  // Método para obter a localização atual do usuário e atualizar o mapa
+  void _setCurrentLocation() async {
+    try {
+      LatLng currentLocation = await _controller.getCurrentLocation();
+      _mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: currentLocation,
+            zoom: 14,
+          ),
+        ),
+      );
+
+      setState(() {
+        _markers.clear();
+        _markers.add(Marker(
+          markerId: const MarkerId('current_location'),
+          position: currentLocation,
+          infoWindow: const InfoWindow(title: 'Você está aqui'),
+        ));
+      });
+    } catch (e) {
+      _showSnackBar(e.toString());
+    }
   }
 
   void _onTap(LatLng latLng) async {
@@ -33,7 +61,8 @@ class _AddPlacesState extends State<AddPlaces> {
     });
 
     try {
-      await _controller.getAddressFromLatLng(_controller.lat!, _controller.long!);
+      await _controller.getAddressFromLatLng(
+          _controller.lat!, _controller.long!);
     } catch (e) {
       _showSnackBar(e.toString());
     }
@@ -96,7 +125,8 @@ class _AddPlacesState extends State<AddPlaces> {
                       if (_formKey.currentState!.validate()) {
                         try {
                           await _controller.addEstablishment();
-                          _showSnackBar('Estabelecimento adicionado com sucesso!');
+                          _showSnackBar(
+                              'Estabelecimento adicionado com sucesso!');
                           Navigator.pop(context);
                         } catch (e) {
                           _showSnackBar(e.toString());
