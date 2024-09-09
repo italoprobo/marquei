@@ -15,7 +15,7 @@ void main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -25,11 +25,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: AuthScreen(),
+      home: const AuthScreen(),
       routes: {
         '/add-place': (context) => const AddPlaces(),
-        '/map': (context) => MapPage(),
-        '/all-establishments': (context) => AllEstablishmentsScreen()
+        '/map': (context) => const MapPage(),
+        '/all-establishments': (context) => const AllEstablishmentsScreen()
       },
     );
   }

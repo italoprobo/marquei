@@ -27,17 +27,11 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
         .from('estabelecimento')
         .select('nome, endereco');
 
-    if (response != null) {
-      setState(() {
-        _allEstabelecimentos = List<Map<String, dynamic>>.from(response);
-        _filteredEstabelecimentos = _allEstabelecimentos;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao buscar estabelecimentos: ${response}')),
-      );
+    setState(() {
+      _allEstabelecimentos = List<Map<String, dynamic>>.from(response);
+      _filteredEstabelecimentos = _allEstabelecimentos;
+    });
     }
-  }
 
   // Método para filtrar estabelecimentos pelo nome
   void _filterEstabelecimentos(String query) {

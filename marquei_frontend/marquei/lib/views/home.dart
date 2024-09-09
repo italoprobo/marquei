@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('id', userId)
           .single();
 
-      if (response != null && response['is_admin'] == true) {
+      if (response['is_admin'] == true) {
         setState(() {
           _isAdmin = true;
         });
@@ -49,12 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('id', user.id)
           .single();
 
-      if (response != null) {
-        setState(() {
-          _userName = response['nome'] ?? 'Usuário';
-        });
-      }
-    }
+      setState(() {
+        _userName = response['nome'] ?? 'Usuário';
+      });
+        }
   }
 
   Future<void> _fetchEstabelecimentos() async {
@@ -64,12 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
         .select('nome, endereco')
         .limit(3); // Limitando para exibir até 3 estabelecimento
 
-    if (response != null) {
-      setState(() {
-        _estabelecimentos = List<Map<String, dynamic>>.from(response);
-      });
+    setState(() {
+      _estabelecimentos = List<Map<String, dynamic>>.from(response);
+    });
     }
-  }
 
   void _navigateToAllEstabelecimentos() {
     Navigator.pushNamed(context,
