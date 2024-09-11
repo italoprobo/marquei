@@ -35,6 +35,8 @@ dependencies:
   # supabase
   supabase_flutter: ^2.0.0
 
+  image_picker:
+  file_picker:
 
   # google maps
   http: 1.2.2

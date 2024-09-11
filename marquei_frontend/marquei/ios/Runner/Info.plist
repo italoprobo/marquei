@@ -51,5 +51,9 @@
 	<string>Precisamos da sua localização para mostrar sua posição no mapa.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Precisamos da sua localização para mostrar sua posição no mapa.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Precisamos acessar a câmera para tirar fotos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Precisamos acessar a galeria para selecionar fotos</string>
 </dict>
 </plist>
