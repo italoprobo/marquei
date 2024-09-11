@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:marquei/views/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -52,24 +53,21 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _userName = response['nome'] ?? 'Usuário';
       });
-        }
+    }
   }
 
   Future<void> _fetchEstabelecimentos() async {
-    // Buscando os estabelecimentos no Supabase (limitado a 3)
     final response = await Supabase.instance.client
         .from('estabelecimento')
-        .select('nome, endereco')
-        .limit(3); // Limitando para exibir até 3 estabelecimento
+        .select('nome, endereco, foto_url');
 
     setState(() {
       _estabelecimentos = List<Map<String, dynamic>>.from(response);
     });
-    }
+  }
 
   void _navigateToAllEstabelecimentos() {
-    Navigator.pushNamed(context,
-        '/all-establishments'); // Rota para a tela com todos os estabelecimentos
+    Navigator.pushNamed(context, '/all-establishments');
   }
 
   @override
@@ -101,19 +99,29 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const SizedBox(height: 20),
           if (_estabelecimentos.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _estabelecimentos.map((estabelecimento) {
-                  return Expanded(
-                    child: Card(
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 200.0,
+                autoPlay: true,
+                enlargeCenterPage: true,
+              ),
+              items: _estabelecimentos.map((estabelecimento) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return Card(
                       elevation: 4,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            if (estabelecimento['foto_url'] != null)
+                              Image.network(
+                                estabelecimento['foto_url'],
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            const SizedBox(height: 8),
                             Text(
                               estabelecimento['nome'],
                               style: const TextStyle(
@@ -130,10 +138,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                    );
+                  },
+                );
+              }).toList(),
             ),
           const SizedBox(height: 20),
           ElevatedButton(
