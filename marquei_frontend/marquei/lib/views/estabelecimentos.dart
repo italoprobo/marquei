@@ -25,13 +25,13 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
   Future<void> _fetchAllEstabelecimentos() async {
     final response = await Supabase.instance.client
         .from('estabelecimento')
-        .select('nome, endereco');
+        .select('nome, endereco, foto_url');
 
     setState(() {
       _allEstabelecimentos = List<Map<String, dynamic>>.from(response);
       _filteredEstabelecimentos = _allEstabelecimentos;
     });
-    }
+  }
 
   // Método para filtrar estabelecimentos pelo nome
   void _filterEstabelecimentos(String query) {
@@ -86,9 +86,17 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
                         margin: const EdgeInsets.symmetric(
                             vertical: 8.0, horizontal: 16.0),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.all(8.0),
+                          leading: estabelecimento['foto_url'] != null
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                    estabelecimento['foto_url'],
+                                  ),
+                                  radius: 30,
+                                )
+                              : const Icon(Icons.store),
                           title: Text(estabelecimento['nome']),
                           subtitle: Text(estabelecimento['endereco']),
-                          leading: const Icon(Icons.store),
                           trailing: ElevatedButton(
                             onPressed: () {
                               Navigator.push(

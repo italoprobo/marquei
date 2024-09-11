@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (_estabelecimentos.isNotEmpty)
             CarouselSlider(
               options: CarouselOptions(
-                height: 200.0,
+                height: 240.0,
                 autoPlay: true,
                 enlargeCenterPage: true,
               ),
