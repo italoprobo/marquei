@@ -76,19 +76,29 @@ class _EstablishmentDetailsScreenState
   }
 
   // Função para buscar quadras do Supabase
-  Future<void> _fetchQuadras() async {
-    final supabase = Supabase.instance.client;
-    try {
-      final response = await supabase
-          .from('quadra')
-          .select()
-          .eq('id_estabelecimento', widget.estabelecimento['id']);
+Future<void> _fetchQuadras() async {
+  final supabase = Supabase.instance.client;
+  try {
+    // Realizando a consulta para buscar as quadras
+    final response = await supabase
+        .from('quadra')
+        .select()
+        .eq('id_estabelecimento', widget.estabelecimento['id']);
 
-      _showError('Erro ao buscar quadras: ${response}');
-        } catch (e) {
-      _showError('Erro ao buscar quadras: $e');
+    // Verifica se a consulta retornou dados
+    if (response != null) {
+      setState(() {
+        _quadras = List<Map<String, dynamic>>.from(response);
+      });
+    } else {
+      _showError('Nenhuma quadra disponível no momento.');
     }
+  } catch (e) {
+    // Tratamento de exceção geral
+    _showError('Erro ao buscar quadras: $e');
   }
+}
+
 
   // Função para exibir mensagens de erro
   void _showError(String message) {
