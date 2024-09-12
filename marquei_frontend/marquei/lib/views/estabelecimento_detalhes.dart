@@ -3,10 +3,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:url_launcher/url_launcher.dart'; // Importação do url_launcher
-
-// Substitua pelo caminho correto para a tela de adicionar quadras esportivas
+import 'package:url_launcher/url_launcher.dart';
 import 'add_court_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'court_reservation_screen.dart'; // Importação da tela de reserva
 
 class EstablishmentDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> estabelecimento;
@@ -22,17 +22,18 @@ class _EstablishmentDetailsScreenState
     extends State<EstablishmentDetailsScreen> {
   LatLng? _location;
   bool _isLoading = true;
+  List<Map<String, dynamic>> _quadras = []; // Lista de quadras
 
   @override
   void initState() {
     super.initState();
     _getCoordinatesFromAddress(widget.estabelecimento['endereco'] ?? '');
+    _fetchQuadras(); // Chamar a função para buscar quadras
   }
 
   // Função para converter o endereço em coordenadas (latitude e longitude)
   Future<void> _getCoordinatesFromAddress(String address) async {
-    final apiKey = dotenv.env[
-        'SUPABASE_GOOGLE_API_KEY']; // Substitua pela sua chave da API do Google Maps
+    final apiKey = dotenv.env['SUPABASE_GOOGLE_API_KEY']; 
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(address)}&key=$apiKey';
 
@@ -74,6 +75,21 @@ class _EstablishmentDetailsScreenState
     }
   }
 
+  // Função para buscar quadras do Supabase
+  Future<void> _fetchQuadras() async {
+    final supabase = Supabase.instance.client;
+    try {
+      final response = await supabase
+          .from('quadra')
+          .select()
+          .eq('id_estabelecimento', widget.estabelecimento['id']);
+
+      _showError('Erro ao buscar quadras: ${response}');
+        } catch (e) {
+      _showError('Erro ao buscar quadras: $e');
+    }
+  }
+
   // Função para exibir mensagens de erro
   void _showError(String message) {
     setState(() {
@@ -91,6 +107,19 @@ class _EstablishmentDetailsScreenState
       MaterialPageRoute(
         builder: (context) =>
             AddCourtScreen(estabelecimentoId: widget.estabelecimento['id']),
+      ),
+    );
+  }
+
+  // Função para navegar para a tela de reserva
+  void _navigateToCourtReservation(int courtId, String courtName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourtReservationScreen(
+          courtId: courtId,
+          courtName: courtName,
+        ),
       ),
     );
   }
@@ -121,12 +150,11 @@ class _EstablishmentDetailsScreenState
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            // Define o tamanho do mapa para reduzir sua altura
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _location != null
                     ? Container(
-                        height: 200, // Defina a altura desejada para o mapa
+                        height: 200,
                         child: GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: _location!,
@@ -158,6 +186,27 @@ class _EstablishmentDetailsScreenState
               onPressed: _navigateToAddCourt,
               child: const Text('Adicionar Quadra Esportiva'),
             ),
+            const SizedBox(height: 20),
+            Text(
+              'Quadras Disponíveis:',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            _quadras.isEmpty
+                ? const Text('Nenhuma quadra disponível.')
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: _quadras.length,
+                      itemBuilder: (context, index) {
+                        final quadra = _quadras[index];
+                        return ListTile(
+                          title: Text(quadra['nome']),
+                          onTap: () =>
+                              _navigateToCourtReservation(quadra['id'], quadra['nome']),
+                        );
+                      },
+                    ),
+                  ),
           ],
         ),
       ),
