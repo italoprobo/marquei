@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:marquei/views/addplace_view.dart';
 import 'package:marquei/views/mapa_estabelecimentos.dart';
+import 'package:marquei/views/id_usuario.dart';
 
 
 
@@ -32,7 +33,8 @@ class MyApp extends StatelessWidget {
         '/add-place': (context) => const AddPlaces(),
         '/map': (context) => const MapPage(),
         '/all-establishments': (context) => const AllEstablishmentsScreen(),
-        '/mapa-estabelecimentos': (context) => const MapaEstabelecimentos()
+        '/mapa-estabelecimentos': (context) => const MapaEstabelecimentos(),
+        '/sessao': (context) => UserIdCheckScreen()
 
       },
     );

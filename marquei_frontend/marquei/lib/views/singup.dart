@@ -1,6 +1,7 @@
 // views/register_screen.dart
 import 'package:flutter/material.dart';
 import '../controllers/singup_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _controller = RegisterController();
+  final _controller = SignupController(Supabase.instance.client);
 
   // Função para exibir mensagem de erro/sucesso
   void _showSnackBar(String message) {

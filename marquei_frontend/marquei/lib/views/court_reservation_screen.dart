@@ -69,6 +69,9 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
   Future<void> _confirmReservation() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
+    //final user = supabase.schema(schema)
+    // final userId = response.user?.id
+    // Supabase.instance.client.auth
     if (user != null) {
       try {
         for (var time in selectedTimes) {
