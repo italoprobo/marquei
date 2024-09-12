@@ -30,16 +30,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  image_picker: ^0.8.5+3
+
 
 
   # supabase
   supabase_flutter: ^2.0.0
 
-  image_picker:
-  file_picker:
 
   # google maps
   http: 1.2.2
+  url_launcher: ^6.1.10
   google_maps_flutter: ^2.1.1
   google_places_flutter: 2.0.9
   geolocator: ^13.0.1 
@@ -52,6 +54,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   geocoding: ^3.0.0
+  carousel_slider: ^5.0.0
 
 dev_dependencies:
   flutter_test:

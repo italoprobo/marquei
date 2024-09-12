@@ -17,10 +17,10 @@ class AuthScreen extends StatelessWidget {
           );
         } else if (snapshot.hasData && snapshot.data != null) {
           // Usuário autenticado
-          return HomeScreen(); 
+          return const HomeScreen(); 
         } else {
           // Usuário não autenticado
-          return LoginScreen(); 
+          return const LoginScreen(); 
         }
       },
     );

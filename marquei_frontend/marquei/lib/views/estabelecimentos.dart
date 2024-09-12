@@ -25,18 +25,12 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
   Future<void> _fetchAllEstabelecimentos() async {
     final response = await Supabase.instance.client
         .from('estabelecimento')
-        .select('nome, endereco');
+        .select('*');
 
-    if (response != null) {
-      setState(() {
-        _allEstabelecimentos = List<Map<String, dynamic>>.from(response);
-        _filteredEstabelecimentos = _allEstabelecimentos;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao buscar estabelecimentos: ${response}')),
-      );
-    }
+    setState(() {
+      _allEstabelecimentos = List<Map<String, dynamic>>.from(response);
+      _filteredEstabelecimentos = _allEstabelecimentos;
+    });
   }
 
   // Método para filtrar estabelecimentos pelo nome
@@ -92,22 +86,28 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
                         margin: const EdgeInsets.symmetric(
                             vertical: 8.0, horizontal: 16.0),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.all(8.0),
+                          leading: estabelecimento['foto_url'] != null
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                    estabelecimento['foto_url'],
+                                  ),
+                                  radius: 30,
+                                )
+                              : const Icon(Icons.store),
                           title: Text(estabelecimento['nome']),
                           subtitle: Text(estabelecimento['endereco']),
-                          leading: const Icon(Icons.store),
-                          trailing: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EstablishmentDetailsScreen(
-                                    estabelecimento: estabelecimento,
-                                  ),
+                          // Redireciona para a página de detalhes ao clicar no card
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EstablishmentDetailsScreen(
+                                  estabelecimento: estabelecimento,
                                 ),
-                              );
-                            },
-                            child: const Text('Ver detalhes'),
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },

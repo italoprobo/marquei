@@ -1,4 +1,5 @@
-// views/addplace.dart
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';  
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../controllers/addplace_controller.dart';
@@ -15,14 +16,14 @@ class _AddPlacesState extends State<AddPlaces> {
   final _controller = AddPlaceController();
   final Set<Marker> _markers = {};
   late GoogleMapController _mapController;
+  Uint8List? _selectedImage; // Armazena os bytes da imagem selecionada
+  String? _fileName; // Armazena o nome do arquivo selecionado
 
-  // Atualiza a câmera do mapa para a posição atual do usuário
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     _setCurrentLocation();
   }
 
-  // Método para obter a localização atual do usuário e atualizar o mapa
   void _setCurrentLocation() async {
     try {
       LatLng currentLocation = await _controller.getCurrentLocation();
@@ -74,6 +75,18 @@ class _AddPlacesState extends State<AddPlaces> {
     );
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final imageBytes = await pickedFile.readAsBytes();
+      setState(() {
+        _selectedImage = imageBytes;
+        _fileName = pickedFile.name; // Salva o nome do arquivo
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,12 +132,26 @@ class _AddPlacesState extends State<AddPlaces> {
                       labelText: 'Endereço',
                     ),
                   ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _controller.photoUrlController,
+                    decoration: const InputDecoration(
+                      labelText: 'URL da Foto (opcional)',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_selectedImage != null)
+                    Image.memory(_selectedImage!),
+                  ElevatedButton(
+                    onPressed: _pickImage,
+                    child: const Text('Carregar Imagem'),
+                  ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
                         try {
-                          await _controller.addEstablishment();
+                          await _controller.addEstablishment(_selectedImage, _fileName);
                           _showSnackBar(
                               'Estabelecimento adicionado com sucesso!');
                           Navigator.pop(context);

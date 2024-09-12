@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:marquei/views/login.dart';
+import 'package:marquei/views/estabelecimento_detalhes.dart'; // Importe a tela de detalhes
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('id', userId)
           .single();
 
-      if (response != null && response['is_admin'] == true) {
+      if (response['is_admin'] == true) {
         setState(() {
           _isAdmin = true;
         });
@@ -49,31 +51,24 @@ class _HomeScreenState extends State<HomeScreen> {
           .eq('id', user.id)
           .single();
 
-      if (response != null) {
-        setState(() {
-          _userName = response['nome'] ?? 'Usuário';
-        });
-      }
-    }
-  }
-
-  Future<void> _fetchEstabelecimentos() async {
-    // Buscando os estabelecimentos no Supabase (limitado a 3)
-    final response = await Supabase.instance.client
-        .from('estabelecimento')
-        .select('nome, endereco')
-        .limit(3); // Limitando para exibir até 3 estabelecimento
-
-    if (response != null) {
       setState(() {
-        _estabelecimentos = List<Map<String, dynamic>>.from(response);
+        _userName = response['nome'] ?? 'Usuário';
       });
     }
   }
 
+  Future<void> _fetchEstabelecimentos() async {
+    final response = await Supabase.instance.client
+        .from('estabelecimento')
+        .select('*');
+
+    setState(() {
+      _estabelecimentos = List<Map<String, dynamic>>.from(response);
+    });
+  }
+
   void _navigateToAllEstabelecimentos() {
-    Navigator.pushNamed(context,
-        '/all-establishments'); // Rota para a tela com todos os estabelecimentos
+    Navigator.pushNamed(context, '/all-establishments');
   }
 
   @override
@@ -105,39 +100,61 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           const SizedBox(height: 20),
           if (_estabelecimentos.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _estabelecimentos.map((estabelecimento) {
-                  return Expanded(
-                    child: Card(
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              estabelecimento['nome'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 235.0,
+                autoPlay: true,
+                enlargeCenterPage: true,
+              ),
+              items: _estabelecimentos.map((estabelecimento) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EstablishmentDetailsScreen(
+                              estabelecimento: estabelecimento,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (estabelecimento['foto_url'] != null)
+                                Image.network(
+                                  estabelecimento['foto_url'],
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              const SizedBox(height: 8),
+                              Text(
+                                estabelecimento['nome'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              estabelecimento['endereco'],
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                estabelecimento['endereco'],
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                    );
+                  },
+                );
+              }).toList(),
             ),
           const SizedBox(height: 20),
           ElevatedButton(

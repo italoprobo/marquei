@@ -31,7 +31,7 @@ class _MapPageState extends State<MapPage> {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: MapPage(),
   ));
 }
