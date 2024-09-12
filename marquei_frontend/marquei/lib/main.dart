@@ -5,6 +5,8 @@ import 'package:marquei/views/map.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:marquei/views/addplace_view.dart';
+import 'package:marquei/views/mapa_estabelecimentos.dart';
+
 
 
 void main() async {
@@ -29,7 +31,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/add-place': (context) => const AddPlaces(),
         '/map': (context) => const MapPage(),
-        '/all-establishments': (context) => const AllEstablishmentsScreen()
+        '/all-establishments': (context) => const AllEstablishmentsScreen(),
+        '/mapa-estabelecimentos': (context) => const MapaEstabelecimentos()
+
       },
     );
   }
