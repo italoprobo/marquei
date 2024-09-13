@@ -59,6 +59,12 @@ class _AllEstablishmentsScreenState extends State<AllEstablishmentsScreen> {
       ),
       body: Column(
         children: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/add-place');
+            },
+            child: const Text('Add Estabelecimento'),
+          ),
           // Barra de pesquisa
           Padding(
             padding: const EdgeInsets.all(8.0),

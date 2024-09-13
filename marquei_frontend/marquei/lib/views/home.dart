@@ -163,12 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.orange,
         title: Text('Olá, $_userName'),
         actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/add-place');
-            },
-            child: const Text('Add Estabelecimento'),
-          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
@@ -183,85 +177,92 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 20),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.all(
-                    16.0), // Opcional: adiciona algum padding ao redor
-                child: Text(
-                  'Estabelecimentos:',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize:
-                        19, // Ajuste o tamanho da fonte conforme necessário
-                    fontWeight:
-                        FontWeight.bold, // Opcional: ajusta o peso da fonte
+          Container(
+            color: Colors.grey[300],
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(
+                      16.0), // Opcional: adiciona algum padding ao redor
+                  child: Text(
+                    'CENTROS ESPORTIVOS:',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize:
+                          19, // Ajuste o tamanho da fonte conforme necessário
+                      fontWeight:
+                          FontWeight.bold, // Opcional: ajusta o peso da fonte
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (_estabelecimentos.isNotEmpty)
-            CarouselSlider(
-              options: CarouselOptions(
-                height: 235.0,
-                autoPlay: true,
-                enlargeCenterPage: true,
-              ),
-              items: _estabelecimentos.map((estabelecimento) {
-                return Builder(
-                  builder: (BuildContext context) {
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EstablishmentDetailsScreen(
-                              estabelecimento: estabelecimento,
+            Container(
+              padding: EdgeInsets.only(bottom: 16),
+              color: Colors.grey[300],
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  height: 235.0,
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                ),
+                items: _estabelecimentos.map((estabelecimento) {
+                  return Builder(
+                    builder: (BuildContext context) {
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EstablishmentDetailsScreen(
+                                estabelecimento: estabelecimento,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          elevation: 4,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (estabelecimento['foto_url'] != null)
+                                  Image.network(
+                                    estabelecimento['foto_url'],
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  estabelecimento['nome'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  estabelecimento['endereco'],
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      },
-                      child: Card(
-                        elevation: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (estabelecimento['foto_url'] != null)
-                                Image.network(
-                                  estabelecimento['foto_url'],
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              const SizedBox(height: 8),
-                              Text(
-                                estabelecimento['nome'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                estabelecimento['endereco'],
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              }).toList(),
+                      );
+                    },
+                  );
+                }).toList(),
+              )
             ),
           const SizedBox(height: 20),
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
                 onPressed: _navigateToAllEstabelecimentos,
@@ -269,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    vertical: 16), // Ajuste o padding conforme necessário
+                    vertical: 8), // Ajuste o padding conforme necessário
                 child: ElevatedButton(
                   onPressed: _navigateToMapaestabelecimentos,
                   child: const Text('Ver Todos no Mapa'),
