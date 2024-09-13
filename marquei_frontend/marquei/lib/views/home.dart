@@ -152,6 +152,10 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/all-establishments');
   }
 
+  void _navigateToMapaestabelecimentos() {
+    Navigator.pushNamed(context, '/mapa-estabelecimentos');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -257,9 +261,21 @@ class _HomeScreenState extends State<HomeScreen> {
               }).toList(),
             ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _navigateToAllEstabelecimentos,
-            child: const Text('Ver Todos'),
+          Column(
+            children: [
+              ElevatedButton(
+                onPressed: _navigateToAllEstabelecimentos,
+                child: const Text('Ver Todos'),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 16), // Ajuste o padding conforme necessário
+                child: ElevatedButton(
+                  onPressed: _navigateToMapaestabelecimentos,
+                  child: const Text('Ver Todos no Mapa'),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           // Exibindo as reservas
