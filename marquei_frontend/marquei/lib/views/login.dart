@@ -23,13 +23,41 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              SizedBox(height: 50),
+              Center(
+              child: Image.asset(
+                'assets/images/marquei.png',
+                height: 120, // Tamanho da imagem
+              ),  
+            ),
+            const SizedBox(height: 20),
+            RichText(
+                text: TextSpan(
+                  text: "Marquei",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold, // Aplica o negrito
+                    color: Colors.orange,
+                    fontSize: 26,
+                  )
+                )
+              ),
+              const SizedBox(height: 20),
+              RichText(
+                text: TextSpan(
+                  text: "Insira seu email e senha",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold, // Aplica o negrito
+                    color: Colors.black,
+                    fontSize: 18,
+                  )
+                )
+              ),
               TextFormField(
                 controller: _controller.emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
