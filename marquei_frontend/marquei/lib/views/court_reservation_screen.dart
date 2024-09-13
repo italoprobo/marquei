@@ -69,14 +69,30 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
   Future<void> _confirmReservation() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
-    //final user = supabase.schema(schema)
-    // final userId = response.user?.id
-    // Supabase.instance.client.auth
+      if (user != null) {
+      }
+
     if (user != null) {
       try {
+          // Buscar o ID do usuário na tabela 'usuarios' com base no ID de autenticação
+          final response = await supabase
+              .from('usuarios')
+              .select('id')
+              .eq('id_auth', user.id) // Assumindo que 'id_auth' é a coluna que referencia o ID de autenticação
+              .maybeSingle();
+
+          if (response == null || response['id'] == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erro: usuário não encontrado na tabela usuários.')),
+            );
+            return;
+          }
+
+          final userId = response['id_auth']; // ID correto da tabela 'usuarios'
+
         for (var time in selectedTimes) {
           final response = await supabase.from('reserva').insert({
-            'id_usuario': user.id,
+            'id_user_auth': user.id,
             'id_quadra': widget.courtId,
             'data': time.toIso8601String().substring(0, 10),
             'hora_inicio': time.toIso8601String().substring(11, 19),
