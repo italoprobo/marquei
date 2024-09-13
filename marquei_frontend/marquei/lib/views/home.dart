@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (user != null) {
       final response = await Supabase.instance.client
           .from('reserva')
-          .select('id_quadra, data, hora_inicio')
+          .select('id_quadra, data, hora_inicio, hora_fim')
           .eq('id_user_auth', user.id);
 
       if (response != null && response is List) {
@@ -116,6 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
               'data': dateFormat.format(DateTime.parse(reserva['data'])),
               'hora_inicio': timeFormat.format(DateTime.parse(
                   reserva['data'] + 'T' + reserva['hora_inicio'])),
+              'hora_fim': timeFormat.format(
+                  DateTime.parse(reserva['data'] + 'T' + reserva['hora_fim'])),
               'quadra_nome': quadra?['nome'],
               'estabelecimento_nome': estabelecimento,
             };
@@ -178,6 +180,25 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           const SizedBox(height: 20),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(
+                    16.0), // Opcional: adiciona algum padding ao redor
+                child: Text(
+                  'Estabelecimentos:',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize:
+                        19, // Ajuste o tamanho da fonte conforme necessário
+                    fontWeight:
+                        FontWeight.bold, // Opcional: ajusta o peso da fonte
+                  ),
+                ),
+              ),
+            ],
+          ),
           if (_estabelecimentos.isNotEmpty)
             CarouselSlider(
               options: CarouselOptions(
@@ -242,6 +263,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 20),
           // Exibindo as reservas
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(
+                    16.0), // Opcional: adiciona algum padding ao redor
+                child: Text(
+                  'Minhas Reservas:',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize:
+                        19, // Ajuste o tamanho da fonte conforme necessário
+                    fontWeight:
+                        FontWeight.bold, // Opcional: ajusta o peso da fonte
+                  ),
+                ),
+              ),
+            ],
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: _reservas.length,
@@ -252,11 +292,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   margin: const EdgeInsets.all(8.0),
                   child: ListTile(
                     title: Text(
-                        'Quadra: ${reserva['quadra_nome'] ?? 'Desconhecida'}'),
+                        'Estabelecimento: ${reserva['estabelecimento_nome'] ?? 'Desconhecido'}'),
                     subtitle: Text(
+                      'Quadra: ${reserva['quadra_nome'] ?? 'Desconhecida'}\n'
                       'Data: ${reserva['data']}\n'
-                      'Hora: ${reserva['hora_inicio']}\n'
-                      'Estabelecimento: ${reserva['estabelecimento_nome'] ?? 'Desconhecido'}',
+                      'Hora Inicial: ${reserva['hora_inicio']}\n'
+                      'Hora Final: ${reserva['hora_fim']}\n',
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
