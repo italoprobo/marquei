@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class CourtReservationScreen extends StatefulWidget {
   final int courtId;
@@ -17,9 +18,10 @@ class CourtReservationScreen extends StatefulWidget {
 
 class _CourtReservationScreenState extends State<CourtReservationScreen> {
   List<DateTime> availableTimes = [];
-  List<DateTime> selectedTimes = []; // Lista de horários selecionados
+  List<DateTime> selectedTimes = [];
   bool isLoading = true;
   Map<DateTime, bool> reservedTimes = {};
+  DateTime selectedDate = DateTime.now(); // Data selecionada
 
   @override
   void initState() {
@@ -30,30 +32,43 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
 
   // Gera os horários disponíveis de 16:00 até 00:00
   void _generateAvailableTimes() {
-    DateTime now = DateTime.now();
-    DateTime start = DateTime(now.year, now.month, now.day, 16, 0);
-    DateTime end = DateTime(now.year, now.month, now.day, 0, 0).add(Duration(days: 1));
+    DateTime start = DateTime(
+        selectedDate.year, selectedDate.month, selectedDate.day, 16, 0);
+    DateTime end =
+        DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 0, 0)
+            .add(Duration(days: 1));
 
-    for (DateTime time = start; time.isBefore(end); time = time.add(Duration(hours: 1))) {
+    availableTimes.clear();
+    for (DateTime time = start;
+        time.isBefore(end);
+        time = time.add(Duration(hours: 1))) {
       availableTimes.add(time);
     }
     setState(() {});
   }
 
-  // Busca os horários reservados no Supabase
+  // Busca os horários reservados no Supabase com base na data selecionada
   Future<void> _fetchReservedTimes() async {
+    setState(() {
+      isLoading = true;
+      reservedTimes.clear();
+    });
+
     final supabase = Supabase.instance.client;
     final response = await supabase
         .from('reserva')
         .select('data, hora_inicio, hora_fim')
         .eq('id_quadra', widget.courtId)
-        .eq('data', DateTime.now().toIso8601String().substring(0, 10)) // Verifica as reservas de hoje
-        .maybeSingle();
+        .eq(
+            'data',
+            selectedDate
+                .toIso8601String()
+                .substring(0, 10)); // Usa a data selecionada
 
-    if (response != null) {
-      final List reservations = response as List;
-      for (var reservation in reservations) {
-        DateTime horaInicio = DateTime.parse('${reservation['data']} ${reservation['hora_inicio']}');
+    if (response != null && response is List) {
+      for (var reservation in response) {
+        DateTime horaInicio = DateTime.parse(
+            '${reservation['data']} ${reservation['hora_inicio']}');
         reservedTimes[horaInicio] = true;
       }
     } else {
@@ -69,46 +84,52 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
   Future<void> _confirmReservation() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
-      if (user != null) {
-      }
 
     if (user != null) {
       try {
-          // Buscar o ID do usuário na tabela 'usuarios' com base no ID de autenticação
-          final response = await supabase
-              .from('usuarios')
-              .select('id')
-              .eq('id_auth', user.id) // Assumindo que 'id_auth' é a coluna que referencia o ID de autenticação
-              .maybeSingle();
+        final response = await supabase
+            .from('usuarios')
+            .select('id')
+            .eq('id_auth', user.id)
+            .maybeSingle();
 
-          if (response == null || response['id'] == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Erro: usuário não encontrado na tabela usuários.')),
-            );
-            return;
-          }
+        if (response == null || response['id'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('Erro: usuário não encontrado na tabela usuários.')),
+          );
+          return;
+        }
 
-          final userId = response['id_auth']; // ID correto da tabela 'usuarios'
+        final userId = response['id'];
 
         for (var time in selectedTimes) {
           final response = await supabase.from('reserva').insert({
             'id_user_auth': user.id,
             'id_quadra': widget.courtId,
-            'data': time.toIso8601String().substring(0, 10),
+            'data': selectedDate
+                .toIso8601String()
+                .substring(0, 10), // Usa a data selecionada
             'hora_inicio': time.toIso8601String().substring(11, 19),
-            'hora_fim': time.add(Duration(hours: 1)).toIso8601String().substring(11, 19),
-            'preco': 50.00, // valor fixo por hora
+            'hora_fim': time
+                .add(Duration(hours: 1))
+                .toIso8601String()
+                .substring(11, 19),
+            'preco': 50.00,
           });
 
-          if (response.error == null) {
+          if (response == null) {
             reservedTimes[time] = true;
           }
         }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reserva confirmada para ${selectedTimes.length} horário(s)')),
+          SnackBar(
+              content: Text(
+                  'Reserva confirmada para ${selectedTimes.length} horário(s)')),
         );
         setState(() {
-          selectedTimes.clear(); // Limpa os horários selecionados após a confirmação
+          selectedTimes.clear();
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,11 +143,28 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
   void _toggleTimeSelection(DateTime time) {
     setState(() {
       if (selectedTimes.contains(time)) {
-        selectedTimes.remove(time); // Remove se já estiver selecionado
+        selectedTimes.remove(time);
       } else {
-        selectedTimes.add(time); // Adiciona se não estiver selecionado
+        selectedTimes.add(time);
       }
     });
+  }
+
+  // Função para selecionar a data
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+    );
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        _generateAvailableTimes();
+        _fetchReservedTimes();
+      });
+    }
   }
 
   @override
@@ -142,6 +180,29 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Exibe a data selecionada acima do botão
+                      Text(
+                        'Data selecionada: ${DateFormat('dd/MM/yyyy').format(selectedDate)}',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(
+                          height: 8), // Espaçamento entre o texto e o botão
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          textStyle: TextStyle(fontSize: 16),
+                        ),
+                        onPressed: _selectDate, // Abre o seletor de data
+                        child: const Text('Selecionar'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Selecione um ou mais horários para ${widget.courtName}:',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -158,7 +219,7 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
                           onTap: isReserved
                               ? null
                               : () {
-                                  _toggleTimeSelection(time); // Permite a seleção múltipla
+                                  _toggleTimeSelection(time);
                                 },
                           child: Container(
                             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -193,10 +254,10 @@ class _CourtReservationScreenState extends State<CourtReservationScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: selectedTimes.isEmpty
-                        ? null
-                        : _confirmReservation, // Desabilita o botão se nada estiver selecionado
-                    child: Text('Confirmar Reserva (${selectedTimes.length} horário(s))'),
+                    onPressed:
+                        selectedTimes.isEmpty ? null : _confirmReservation,
+                    child: Text(
+                        'Confirmar Reserva (${selectedTimes.length} horário(s))'),
                   ),
                 ],
               ),

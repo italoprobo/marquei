@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:marquei/views/estabelecimento_detalhes.dart';
 import 'package:marquei/views/login.dart';
-import 'package:marquei/views/estabelecimento_detalhes.dart'; // Importe a tela de detalhes
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,6 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isAdmin = false;
   String _userName = '';
   List<Map<String, dynamic>> _estabelecimentos = [];
+  List<Map<String, dynamic>> _reservas = [];
+  Map<int, String> _quadras = {}; // Mapeia ID da quadra para nome da quadra
 
   @override
   void initState() {
@@ -22,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _checkIfAdmin();
     _fetchUserName();
     _fetchEstabelecimentos();
+    _fetchReservas();
+    _fetchQuadras(); // Buscar os nomes das quadras
   }
 
   Future<void> _checkIfAdmin() async {
@@ -48,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final response = await Supabase.instance.client
           .from('usuarios')
           .select('nome')
-          .eq('id', user.id)
+          .eq('id_auth', user.id)
           .single();
 
       setState(() {
@@ -58,13 +63,87 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchEstabelecimentos() async {
-    final response = await Supabase.instance.client
-        .from('estabelecimento')
-        .select('*');
+    final response =
+        await Supabase.instance.client.from('estabelecimento').select('*');
 
     setState(() {
       _estabelecimentos = List<Map<String, dynamic>>.from(response);
     });
+  }
+
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat timeFormat = DateFormat('HH:mm');
+
+  Future<void> _fetchReservas() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final response = await Supabase.instance.client
+          .from('reserva')
+          .select('id_quadra, data, hora_inicio')
+          .eq('id_user_auth', user.id);
+
+      if (response != null && response is List) {
+        final reservas = List<Map<String, dynamic>>.from(response);
+
+        final quadrasIds = reservas.map((r) => r['id_quadra'] as int).toSet();
+
+        final quadrasResponse = await Supabase.instance.client
+            .from('quadra')
+            .select('id, nome, id_estabelecimento')
+            .or('id.in.(${quadrasIds.join(',')})');
+
+        final quadras = Map<int, Map<String, dynamic>>.fromEntries(
+            (quadrasResponse as List).map((q) => MapEntry(q['id'] as int, q)));
+
+        final estabelecimentosIds =
+            quadras.values.map((q) => q['id_estabelecimento'] as int).toSet();
+
+        final estabelecimentosResponse = await Supabase.instance.client
+            .from('estabelecimento')
+            .select('id, nome')
+            .or('id.in.(${estabelecimentosIds.join(',')})');
+
+        final estabelecimentos = Map<int, String>.fromEntries(
+            (estabelecimentosResponse as List)
+                .map((e) => MapEntry(e['id'] as int, e['nome'] as String)));
+
+        setState(() {
+          _reservas = reservas.map((reserva) {
+            final quadra = quadras[reserva['id_quadra'] as int];
+            final estabelecimento =
+                estabelecimentos[quadra?['id_estabelecimento'] as int];
+            return {
+              'data': dateFormat.format(DateTime.parse(reserva['data'])),
+              'hora_inicio': timeFormat.format(DateTime.parse(
+                  reserva['data'] + 'T' + reserva['hora_inicio'])),
+              'quadra_nome': quadra?['nome'],
+              'estabelecimento_nome': estabelecimento,
+            };
+          }).toList();
+        });
+      } else {
+        print('Erro ao buscar reservas ou nenhuma reserva encontrada.');
+      }
+    }
+  }
+
+  Future<void> _fetchQuadras() async {
+    final response = await Supabase.instance.client
+        .from('quadra')
+        .select('id, nome'); // Busca o ID e nome das quadras
+
+    if (response != null && response is List) {
+      final quadras = Map<int, String>.fromIterable(
+        response,
+        key: (item) => item['id'],
+        value: (item) => item['nome'],
+      );
+      setState(() {
+        _quadras = quadras;
+      });
+    } else {
+      print('Erro ao buscar quadras ou nenhuma quadra encontrada.');
+    }
   }
 
   void _navigateToAllEstabelecimentos() {
@@ -160,6 +239,30 @@ class _HomeScreenState extends State<HomeScreen> {
           ElevatedButton(
             onPressed: _navigateToAllEstabelecimentos,
             child: const Text('Ver Todos'),
+          ),
+          const SizedBox(height: 20),
+          // Exibindo as reservas
+          Expanded(
+            child: ListView.builder(
+              itemCount: _reservas.length,
+              itemBuilder: (context, index) {
+                final reserva = _reservas[index];
+                return Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text(
+                        'Quadra: ${reserva['quadra_nome'] ?? 'Desconhecida'}'),
+                    subtitle: Text(
+                      'Data: ${reserva['data']}\n'
+                      'Hora: ${reserva['hora_inicio']}\n'
+                      'Estabelecimento: ${reserva['estabelecimento_nome'] ?? 'Desconhecido'}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
